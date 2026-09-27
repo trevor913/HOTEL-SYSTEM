@@ -1,0 +1,27 @@
+export const sw = {
+  brand: { tagline: "Biashara yako. Kwenye simu yako." },
+  nav: { home: "Leo", mauzo: "Mauzo", madeni: "Madeni", oda: "Oda", msaidizi: "Msaidizi", matumizi: "Matumizi", more: "Zaidi", settings: "Mipangilio", outbox: "SMS Outbox" },
+  greet: { morning: "Habari za asubuhi", afternoon: "Habari za mchana", evening: "Habari za jioni", night: "Usiku mwema" },
+  home: {
+    sales: "Mauzo ya Leo", expenses: "Matumizi", profit: "Faida", newDebts: "Madeni Mpya", meter: "Faida Meter",
+    vsAvg: "dhidi ya wastani wa siku 7", feed: "Kinachoendelea", lowStock: "Stock iko chini", pendingOrders: "Oda zinasubiri",
+    soldOut: "Imeisha", empty: "Hakuna kitu bado leo. Andika mauzo ya kwanza.", viewAll: "Ona zote", yesterdayNote: "Bado ni usiku, hizi ni takwimu za jana.",
+    cash: "Cash", mpesa: "M-Pesa",
+  },
+  fab: { sale: "Andika Mauzo", debt: "Andika Deni", expense: "Andika Matumizi", voice: "Voice Note" },
+  madeni: {
+    title: "Madeni", outstanding: "Jumla wanadaiwa", debtors: "Wadaiwa", oldest: "Deni la zamani", recovered: "Imerudi wiki hii",
+    all: "Zote", days: "siku", pay: "Lipa", remind: "Kumbusha", newDebt: "Deni Jipya", lastPaid: "Alilipa", never: "Hajawahi kulipa",
+    recordPayment: "Rekodi Malipo", settle: "Lipa Yote", confirm: "Thibitisha", settled: "Deni Limelipwa!", reminderSent: "Kumbusho limetumwa",
+    history: "Historia ya deni", pickCustomer: "Chagua mteja", newCustomer: "Mteja mpya", name: "Jina", phone: "Simu (hiari)",
+    amount: "Kiasi", note: "Maelezo (hiari)", save: "Hifadhi Deni", search: "Tafuta mteja…", emptyTitle: "Hakuna madeni hapa", emptyBody: "Kila mtu amelipa. Hiyo ndiyo biashara safi.",
+    balance: "Salio", swipeHint: "Telezesha kulia kulipa, kushoto kukumbusha", overpay: "Kiasi kimezidi deni",
+  },
+  mauzo: { title: "Mauzo", total: "Jumla", method: "Njia ya malipo", onDebt: "Weka kwa deni", logSale: "Andika Mauzo", logged: "Mauzo yameandikwa", clear: "Futa", today: "Leo", sales: "mauzo", filterAll: "Zote", pos: "Uza", list: "Historia" },
+  matumizi: { title: "Matumizi", soko: "Soko ya Leo", add: "Ongeza", logged: "Imeandikwa", byCategory: "Kwa aina", thisWeek: "wiki hii", recent: "Ya karibuni", other: "Nyingine", description: "Maelezo" },
+  oda: { title: "Oda", new: "Mpya", preparing: "Inapikwa", ready: "Tayari", out: "Njiani", delivered: "Imefika", advance: "Songesha", pickup: "Kuchukua", delivery: "Kuletewa", paid: "Imelipwa", pod: "Lipa ikifika", emptyCol: "Hakuna oda" },
+  msaidizi: { title: "Msaidizi", placeholder: "Andika au shikilia mic…", hold: "Shikilia mic kurekodi", recording: "Inarekodi… achilia kutuma", thinking: "Nafikiria…", suggestions: ["Leo nimepataje?", "Madeni yote", "Nimeuza chapo mbili na chai, mpesa", "Kesho nipike nini?", "Mafuta imebaki ngapi?"], intro: "Niambie chochote kuhusu biashara: mauzo, madeni, matumizi, stock. Naelewa Kiswahili, Sheng na English." },
+  settings: { title: "Mipangilio", language: "Lugha", theme: "Mandhari", dark: "Giza", light: "Mwanga", reset: "Rudisha data ya demo", outbox: "SMS Outbox", outboxBody: "Kila SMS ambayo ingetumwa kwa wateja (mock mode).", simulate: "Iga malipo ya M-Pesa", simulated: "Malipo yameigwa na kulinganishwa", noSms: "Hakuna SMS bado. Lipa deni au kumbusha mteja uone hapa." },
+  pay: { cash: "Cash", mpesa: "M-Pesa", debt: "Deni" },
+  common: { done: "Sawa", cancel: "Ghairi", back: "Rudi", close: "Funga", offline: "Inasubiri mtandao", pending: "zinasubiri", more: "Onyesha zaidi" },
+} as const;

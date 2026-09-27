@@ -1,0 +1,70 @@
+@import "tailwindcss";
+@import "./tokens.css";
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-raised: var(--bg-raised);
+  --color-overlay: var(--bg-overlay);
+  --color-line: var(--border);
+  --color-ink: var(--text);
+  --color-dim: var(--text-dim);
+  --color-flame: var(--flame);
+  --color-flame-hot: var(--flame-hot);
+  --color-ugali: var(--ugali);
+  --color-sukuma: var(--sukuma);
+  --color-nyanya: var(--nyanya);
+  --color-chai: var(--chai);
+  --font-display: "Clash Display", var(--font-inter), system-ui, sans-serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --text-display-2xl: 3.5rem;
+  --text-display-2xl--line-height: 4rem;
+  --ease-steam: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+  html { -webkit-tap-highlight-color: transparent; text-size-adjust: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    overscroll-behavior-y: contain;
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible { outline: 2px solid var(--flame); outline-offset: 2px; border-radius: 10px; }
+  button { cursor: pointer; touch-action: manipulation; }
+  ::selection { background: color-mix(in oklab, var(--flame) 40%, transparent); }
+}
+
+@layer utilities {
+  .money { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; letter-spacing: -0.01em; }
+  .font-display { font-family: var(--font-display); }
+  .pb-tabs { padding-bottom: calc(var(--tab-h) + var(--safe-b) + 24px); }
+  .bottom-tabs { bottom: 0; padding-bottom: var(--safe-b); }
+  .above-tabs { bottom: calc(var(--tab-h) + var(--safe-b) + 14px); }
+  .pt-safe { padding-top: max(var(--safe-t), 12px); }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { scrollbar-width: none; }
+  .grain {
+    background-image: radial-gradient(color-mix(in oklab, var(--text) 5%, transparent) 1px, transparent 1px);
+    background-size: 3px 3px;
+  }
+  .ember {
+    background: radial-gradient(120% 90% at 85% -10%, color-mix(in oklab, var(--flame) 22%, transparent), transparent 60%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}
+
+@keyframes steam-rise {
+  0% { transform: translateY(4px) scaleY(0.9); opacity: 0; }
+  30% { opacity: 0.9; }
+  100% { transform: translateY(-10px) scaleY(1.1); opacity: 0; }
+}
+.steam path { animation: steam-rise 2.6s var(--ease-steam) infinite; }
+.steam path:nth-child(2) { animation-delay: 0.5s; }
+.steam path:nth-child(3) { animation-delay: 1s; }
+
+@keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--flame) 55%, transparent); } 100% { box-shadow: 0 0 0 12px transparent; } }
+.pulse-ring { animation: pulse-ring 1.6s var(--ease-steam) infinite; }

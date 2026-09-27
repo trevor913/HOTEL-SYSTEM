@@ -1,0 +1,39 @@
+/* Jikoni design tokens (§9.3). Dark-first; light via [data-theme="light"]. */
+:root {
+  --bg: #0c0a09;
+  --bg-raised: #171412;
+  --bg-overlay: #1f1b18;
+  --border: #2a2522;
+  --text: #f5f0ea;
+  --text-dim: #a69d93;
+  --flame: #ff6b2c;
+  --flame-hot: #ff8f4d;
+  --ugali: #e9dcc3;
+  --sukuma: #3e9b4f;
+  --nyanya: #e5484d;
+  --chai: #c99a5b;
+
+  --flame-ink: #1a0d06;           /* text on flame */
+  --scrim: rgb(0 0 0 / 0.62);
+  --tab-h: 68px;                  /* bottom tab bar */
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+  --ease-steam: cubic-bezier(0.22, 1, 0.36, 1);
+  --radius-sheet: 28px;
+}
+
+[data-theme="light"] {
+  --bg: #faf6ef;
+  --bg-raised: #ffffff;
+  --bg-overlay: #f2ebe0;
+  --border: #e6dccd;
+  --text: #1c1917;
+  --text-dim: #6e645a;
+  --flame: #e8551a;
+  --flame-hot: #ff6b2c;
+  --ugali: #7a5c2e;
+  --sukuma: #2f7d3e;
+  --nyanya: #cc3136;
+  --chai: #9c7134;
+  --scrim: rgb(28 25 23 / 0.45);
+}
