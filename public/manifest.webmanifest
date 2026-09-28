@@ -1,0 +1,21 @@
+{
+  "name": "Hotel System",
+  "short_name": "Hotel System",
+  "description": "Biashara yako. Kwenye simu yako.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0C0A09",
+  "theme_color": "#0C0A09",
+  "lang": "sw",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Andika Mauzo", "url": "/dashboard/mauzo" },
+    { "name": "Madeni", "url": "/dashboard/madeni" },
+    { "name": "Msaidizi", "url": "/dashboard/msaidizi" }
+  ]
+}
