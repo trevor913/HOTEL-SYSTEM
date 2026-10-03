@@ -25,7 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="sw" data-theme="dark" className={inter.variable} suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://api.fontshare.com" crossOrigin="" />
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+        
         <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&display=swap" />
       </head>
       <body>{children}</body>
