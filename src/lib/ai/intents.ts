@@ -87,12 +87,22 @@ export function parseSale(text: string, catalog: Catalog): Intent | null {
   const items: { itemId: string; name: string; qty: number }[] = [];
   let i = 0;
   while (i < tokens.length) {
+    // Prefix quantity: "2 chapati", "mbili chai"
+    let prefixQty: number | null = null;
+    if (isNumberToken(tokens[i]!)) {
+      const pre: string[] = [];
+      let j = i;
+      while (j < tokens.length && isNumberToken(tokens[j]!)) pre.push(tokens[j++]!);
+      i = j;
+      if (!matchCatalog(tokens, i, catalog.menu)) continue;
+      prefixQty = parseNumberTokens(pre);
+    }
     const m = matchCatalog(tokens, i, catalog.menu);
     if (!m) { i++; continue; }
     i += m.len;
     const numToks: string[] = [];
-    while (i < tokens.length && isNumberToken(tokens[i]!)) numToks.push(tokens[i++]!);
-    const qty = numToks.length ? parseNumberTokens(numToks) ?? 1 : 1;
+    if (prefixQty === null) while (i < tokens.length && isNumberToken(tokens[i]!)) numToks.push(tokens[i++]!);
+    const qty = prefixQty ?? (numToks.length ? parseNumberTokens(numToks) ?? 1 : 1);
     const existing = items.find((x) => x.itemId === m.item.id);
     if (existing) existing.qty += qty;
     else items.push({ itemId: m.item.id, name: m.item.name, qty: Math.max(1, Math.round(qty)) });
@@ -115,7 +125,7 @@ export function parseIntent(input: string, catalog: Catalog): Intent {
     return { kind: "get_debts_report" };
   if (/(wiki hii|this week|ripoti ya wiki|week report)/.test(t)) return { kind: "get_week_report" };
   if (/(inauzwa sana|best ?sellers?|zinazouzwa|top items|inatoka sana)/.test(t)) return { kind: "get_best_sellers" };
-  if (/(kesho|tomorrow).*(pik|cook|mpango|plan)|(mpango|plan).*(kesho|tomorrow)/.test(t)) return { kind: "plan_tomorrow" };
+  if (/(kesho|tomorrow).*(pik|cook|mpango|plan)|(mpango|plan|pik|cook).*(kesho|tomorrow)/.test(t)) return { kind: "plan_tomorrow" };
 
   // Stock check: "Mafuta imebaki lita ngapi?", "How much oil is left?"
   if (/(imebaki|imesalia|zimebaki|iko ngapi|ngapi imebaki|stock|is left|how much .* left)/.test(t)) {

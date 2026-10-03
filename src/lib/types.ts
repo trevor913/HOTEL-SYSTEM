@@ -20,7 +20,7 @@ export interface OrderItem { menuItemId: ID; qty: number; unitPriceCents: number
 export interface Order { id: ID; code: string; customerName: string; customerPhone: string; status: OrderStatus; type: "pickup" | "delivery"; addressText?: string; totalCents: number; paymentStatus: "unpaid" | "paid" | "pay_on_delivery"; riderName?: string; placedVia: "public_menu" | "whatsapp" | "manual"; items: OrderItem[]; createdAt: string; updatedAt: string }
 export interface MpesaTxn { id: ID; providerTxId: string; type: "c2b" | "stk"; phone: string; amountCents: number; payerName: string; matchedEntity: "sale" | "debt" | "order" | null; matchedId: ID | null; status: "unmatched" | "matched" | "ignored"; createdAt: string }
 export interface Staff { id: ID; name: string; role: "owner" | "staff"; dailyWageCents: number; pin: string }
-export interface SmsMessage { id: ID; to: string; toName: string; body: string; kind: "receipt" | "reminder" | "order"; status: "queued" | "sent"; createdAt: string }
+export interface SmsMessage { id: ID; to: string; toName: string; body: string; kind: "receipt" | "reminder" | "order" | "brief"; status: "queued" | "sent"; channel?: "sms" | "whatsapp"; createdAt: string }
 export interface FeedEvent { id: ID; kind: "sale" | "mpesa" | "debt_new" | "debt_paid" | "expense" | "order"; title: string; amountCents: number; createdAt: string }
 export interface ChatMessage { id: ID; role: "user" | "assistant"; content: string; card?: ChatCard; createdAt: string }
 export type ChatCard =

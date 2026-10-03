@@ -1,5 +1,6 @@
 import { businessDayStart, daysBetween, inBusinessDay } from "../utils/dates";
 import type { Customer, Debt, Expense, MenuItem, Sale } from "../types";
+import type { DayItemRecord } from "../domain/planner";
 
 export function dayTotals(s: { sales: Sale[]; expenses: Expense[]; debts: Debt[] }, daysAgo = 0, now = new Date()) {
   const sales = s.sales.filter((x) => inBusinessDay(x.createdAt, now, daysAgo));
@@ -69,6 +70,29 @@ export function priceSeries(expenses: Expense[], match: string, days = 14, now =
   const out: number[] = [];
   for (let i = days - 1; i >= 0; i--) {
     out.push(expenses.filter((e) => inBusinessDay(e.createdAt, now, i) && e.description.toLowerCase().includes(match.toLowerCase())).reduce((a, e) => a + e.amountCents, 0));
+  }
+  return out;
+}
+
+/** Per-item daily sold quantities for the last N business days (planner input). */
+export function planHistory(s: { sales: Sale[]; menu: MenuItem[] }, now = new Date(), days = 21): DayItemRecord[] {
+  const base = businessDayStart(now, 0).getTime();
+  const counts = new Map<string, number>();
+  for (const sale of s.sales) {
+    const t = new Date(sale.createdAt).getTime();
+    if (t >= base) continue;
+    const idx = Math.floor((base - t) / 86_400_000) + 1;
+    if (idx > days) continue;
+    for (const it of sale.items) counts.set(`${idx}|${it.menuItemId}`, (counts.get(`${idx}|${it.menuItemId}`) ?? 0) + it.qty);
+  }
+  const out: DayItemRecord[] = [];
+  for (let i = 1; i <= days; i++) {
+    const d = businessDayStart(now, i);
+    const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    for (const m of s.menu) {
+      const sold = counts.get(`${i}|${m.id}`) ?? 0;
+      out.push({ date, itemId: m.id, soldQty: sold, cookedQty: sold, soldoutAt: null, wasteQty: 0 });
+    }
   }
   return out;
 }

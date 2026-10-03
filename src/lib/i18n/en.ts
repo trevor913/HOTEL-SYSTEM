@@ -25,5 +25,6 @@ export const en: Dict = {
   msaidizi: { title: "Assistant", placeholder: "Type or hold the mic…", hold: "Hold the mic to record", recording: "Recording… release to send", thinking: "Thinking…", suggestions: ["How did I do today?", "All debts", "Sold chapo 2 and chai, mpesa", "Plan for tomorrow", "How much oil is left?"], intro: "Tell me anything about the business: sales, debts, expenses, stock. I understand Swahili, Sheng and English." },
   settings: { title: "Settings", language: "Language", theme: "Theme", dark: "Dark", light: "Light", reset: "Reset demo data", outbox: "SMS Outbox", outboxBody: "Every SMS that would go to customers (mock mode).", simulate: "Simulate M-Pesa payment", simulated: "Payment simulated and matched", noSms: "No SMS yet. Settle a debt or send a reminder to see one here." },
   pay: { cash: "Cash", mpesa: "M-Pesa", debt: "Credit" },
+  briefs: { evening: "Evening Pulse", morning: "Morning Brief", toWhatsapp: "Send to my WhatsApp", sentWa: "Sent to your WhatsApp", nudgesTitle: "debt reminders waiting", nudgesBody: "Debts older than 7 days. Tap ✓ to send.", approveAll: "Send all", sentMany: "reminders sent" },
   common: { done: "Done", cancel: "Cancel", back: "Back", close: "Close", offline: "Waiting for network", pending: "pending", more: "Show more" },
 };

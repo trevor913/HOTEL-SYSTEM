@@ -7,8 +7,7 @@ import { parseIntent, type Catalog, type Intent } from "./intents";
 import { formatKES } from "../utils/money";
 import { agingReport } from "../domain/debts";
 import { planTomorrow } from "../domain/planner";
-import { bestSellers, dayTotals, debtors } from "../store/selectors";
-import { inBusinessDay } from "../utils/dates";
+import { bestSellers, dayTotals, debtors, planHistory } from "../store/selectors";
 import type { ChatCard } from "../types";
 import type { useApp } from "../store/app-store";
 
@@ -65,7 +64,7 @@ export function runOfflineAgent(text: string, s: Store): AgentReply {
   return execute(intent, s);
 }
 
-function execute(intent: Intent, s: Store): AgentReply {
+export function execute(intent: Intent, s: Store): AgentReply {
   switch (intent.kind) {
     case "log_sale": {
       let customerId: string | null = null;
@@ -139,12 +138,7 @@ function execute(intent: Intent, s: Store): AgentReply {
       return { tool: "get_best_sellers", text: "Vinavyouzwa sana wiki hii:", card: { type: "list", title: "Top 5 (siku 7)", rows: b.map((x) => ({ label: `${x.item.name} · ${x.qty}`, value: formatKES(x.cents) })) } };
     }
     case "plan_tomorrow": {
-      const history = s.menu.flatMap((m) =>
-        Array.from({ length: 21 }, (_, i) => {
-          const sold = s.sales.filter((x) => inBusinessDay(x.createdAt, new Date(), i + 1)).reduce((a, x) => a + (x.items.find((it) => it.menuItemId === m.id)?.qty ?? 0), 0);
-          const d = new Date(); d.setDate(d.getDate() - i - 1);
-          return { date: d.toISOString().slice(0, 10), itemId: m.id, soldQty: sold, cookedQty: sold, soldoutAt: null, wasteQty: 0 };
-        }));
+      const history = planHistory(s);
       const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
       const plan = planTomorrow(history, tomorrow).slice(0, 7);
       return { tool: "plan_tomorrow", text: "Mpango wa kesho kwa historia ya wiki 3:", card: { type: "list", title: "Pika kesho", rows: plan.map((p) => ({ label: s.menu.find((m) => m.id === p.itemId)?.name ?? p.itemId, value: `${p.suggestedQty} sahani` })) } };

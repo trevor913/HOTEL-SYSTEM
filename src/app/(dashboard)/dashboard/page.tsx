@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { AlertTriangle, ArrowDownRight, ArrowUpRight, ChefHat, CircleDollarSign, NotebookPen, Receipt, ShoppingBasket, Smartphone } from "lucide-react";
 import { AnimatedMoney } from "@/components/ui/AnimatedMoney";
 import { FaidaMeter } from "@/components/dashboard/FaidaMeter";
+import { BriefsCard } from "@/components/dashboard/BriefsCard";
 import { useT, useLang } from "@/lib/i18n";
 import { useApp } from "@/lib/store/app-store";
 import { avgProfit, dayTotals } from "@/lib/store/selectors";
@@ -76,6 +77,8 @@ export default function LeoPage() {
       <section className="mx-5 mt-4 rounded-3xl border border-line bg-raised p-4">
         <FaidaMeter profitCents={today.profitCents} avgCents={avg} label={t.home.meter} caption={t.home.vsAvg} />
       </section>
+
+      <BriefsCard />
 
       <section className="mt-7 px-5">
         <div className="flex items-baseline justify-between">

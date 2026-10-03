@@ -23,5 +23,6 @@ export const sw = {
   msaidizi: { title: "Msaidizi", placeholder: "Andika au shikilia mic…", hold: "Shikilia mic kurekodi", recording: "Inarekodi… achilia kutuma", thinking: "Nafikiria…", suggestions: ["Leo nimepataje?", "Madeni yote", "Nimeuza chapo mbili na chai, mpesa", "Kesho nipike nini?", "Mafuta imebaki ngapi?"], intro: "Niambie chochote kuhusu biashara: mauzo, madeni, matumizi, stock. Naelewa Kiswahili, Sheng na English." },
   settings: { title: "Mipangilio", language: "Lugha", theme: "Mandhari", dark: "Giza", light: "Mwanga", reset: "Rudisha data ya demo", outbox: "SMS Outbox", outboxBody: "Kila SMS ambayo ingetumwa kwa wateja (mock mode).", simulate: "Iga malipo ya M-Pesa", simulated: "Malipo yameigwa na kulinganishwa", noSms: "Hakuna SMS bado. Lipa deni au kumbusha mteja uone hapa." },
   pay: { cash: "Cash", mpesa: "M-Pesa", debt: "Deni" },
+  briefs: { evening: "Evening Pulse · Jioni", morning: "Morning Brief · Asubuhi", toWhatsapp: "Nitumie WhatsApp", sentWa: "Imetumwa kwa WhatsApp yako", nudgesTitle: "kumbusho za madeni zinasubiri", nudgesBody: "Madeni ya zaidi ya siku 7. Gusa ✓ kutuma.", approveAll: "Tuma zote", sentMany: "kumbusho zimetumwa" },
   common: { done: "Sawa", cancel: "Ghairi", back: "Rudi", close: "Funga", offline: "Inasubiri mtandao", pending: "zinasubiri", more: "Onyesha zaidi" },
 } as const;

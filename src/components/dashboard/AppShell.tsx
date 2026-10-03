@@ -7,6 +7,7 @@ import { BookOpen, Bot, ChefHat, CloudOff, Home, Mic, NotebookPen, Plus, Receipt
 import { Logo } from "@/components/brand/Logo";
 import { Toaster } from "@/components/ui/Toast";
 import { NewDebtSheet } from "./NewDebtSheet";
+import { MsaidiziLauncher } from "./MsaidiziLauncher";
 import { useT } from "@/lib/i18n";
 import { useApp } from "@/lib/store/app-store";
 import { cn } from "@/lib/utils/cn";
@@ -81,6 +82,7 @@ function Shell({ children }: { children: ReactNode }) {
       </main>
 
       {!hideFab && <SpeedDial onDebt={() => setDebtOpen(true)} />}
+      {!pathname.startsWith("/dashboard/msaidizi") && !pathname.startsWith("/dashboard/mauzo") && <MsaidiziLauncher />}
       <NewDebtSheet open={debtOpen} onClose={() => setDebtOpen(false)} />
 
       {/* Bottom tab bar: thumb zone (mobile) */}

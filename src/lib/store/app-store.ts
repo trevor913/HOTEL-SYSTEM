@@ -8,7 +8,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { allocatePayment, receiptSms, reminderSms, settleAll, type DebtLike } from "../domain/debts";
 import { autoMatch } from "../domain/automatch";
-import type { ChatMessage, Debt, Expense, ExpenseCategory, FeedEvent, MpesaTxn, Order, OrderStatus, Sale, SaleItem, SmsMessage } from "../types";
+import type { ChatMessage, Debt, Expense, ExpenseCategory, FeedEvent, InventoryItem, MenuCategory, MenuItem, MpesaTxn, Order, OrderStatus, Sale, SaleItem, SmsMessage } from "../types";
 import { generateSeed, type SeedData } from "./seed";
 
 export const ORDER_FLOW: OrderStatus[] = ["new", "preparing", "ready", "out_for_delivery", "delivered"];
@@ -32,6 +32,13 @@ interface AppState extends SeedData {
   sendReminder: (customerId: string) => SmsMessage | undefined;
   simulateMpesa: () => MpesaTxn;
   matchMpesa: (txId: string, entity: "debt" | "order", entityId: string) => void;
+  updateStock: (p: { itemId: string; qty: number; mode: "set" | "add" | "subtract" }) => InventoryItem | undefined;
+  createOrder: (p: { customerName: string; customerPhone: string; items: { menuItemId: string; qty: number }[]; type: Order["type"]; addressText?: string; placedVia?: Order["placedVia"]; paymentStatus?: Order["paymentStatus"] }) => Order;
+  addMenuItem: (p: { name: string; nameSw?: string; category: MenuCategory; priceCents: number; emoji?: string }) => MenuItem;
+  updateMenuItem: (id: string, patch: Partial<Omit<MenuItem, "id">>) => void;
+  deleteMenuItem: (id: string) => void;
+  logSupplierPurchase: (p: { supplierId: string; description: string; amountCents: number; paid: boolean; category?: ExpenseCategory }) => Expense;
+  pushOutbox: (m: Omit<SmsMessage, "id" | "createdAt">) => void;
   pushChat: (m: Omit<ChatMessage, "id" | "createdAt">) => void;
   clearChat: () => void;
   resetDemo: () => void;
@@ -181,6 +188,53 @@ export const useApp = create<AppState>()(
         }
         set((st) => ({ mpesa: st.mpesa.map((m) => (m.id === txId ? { ...m, status: "matched" as const, matchedEntity: entity, matchedId: entityId } : m)) }));
       },
+
+      updateStock: ({ itemId, qty, mode }) => {
+        let out: InventoryItem | undefined;
+        set((s) => ({
+          inventory: s.inventory.map((i) => {
+            if (i.id !== itemId) return i;
+            const next = mode === "set" ? qty : mode === "add" ? i.currentQty + qty : i.currentQty - qty;
+            out = { ...i, currentQty: Math.max(0, Math.round(next * 100) / 100) };
+            return out;
+          }),
+        }));
+        return out;
+      },
+
+      createOrder: ({ customerName, customerPhone, items, type, addressText, placedVia = "manual", paymentStatus = "pay_on_delivery" }) => {
+        const { menu, orders } = get();
+        const lines = items.map((i) => {
+          const m = menu.find((x) => x.id === i.menuItemId);
+          if (!m) throw new Error(`Unknown menu item ${i.menuItemId}`);
+          return { menuItemId: m.id, qty: i.qty, unitPriceCents: m.priceCents };
+        });
+        const total = lines.reduce((a, l) => a + l.qty * l.unitPriceCents, 0);
+        const last = Math.max(1030, ...orders.map((o) => Number(o.code.split("-")[1]) || 0));
+        const order: Order = { id: uid("o"), code: `KB-${last + 1}`, customerName, customerPhone, status: "new", type, addressText, totalCents: total, paymentStatus, placedVia, items: lines, createdAt: nowIso(), updatedAt: nowIso() };
+        set((s) => ({ orders: [order, ...s.orders], feed: [feed("order", `Oda ${order.code}: ${customerName}`, total), ...s.feed].slice(0, 40) }));
+        return order;
+      },
+
+      addMenuItem: ({ name, nameSw, category, priceCents, emoji = "🍽️" }) => {
+        const hue = [...name].reduce((a, c) => a + c.charCodeAt(0) * 7, 0) % 360;
+        const item: MenuItem = { id: uid("m"), name, nameSw: nameSw ?? name, category, priceCents, emoji, hue, isAvailable: true, soldOutToday: false, sortOrder: get().menu.length };
+        set((s) => ({ menu: [...s.menu, item] }));
+        return item;
+      },
+      updateMenuItem: (id, patch) => set((s) => ({ menu: s.menu.map((m) => (m.id === id ? { ...m, ...patch } : m)) })),
+      deleteMenuItem: (id) => set((s) => ({ menu: s.menu.filter((m) => m.id !== id) })),
+
+      logSupplierPurchase: ({ supplierId, description, amountCents, paid, category = "soko" }) => {
+        const e: Expense = { id: uid("ex"), category, description, amountCents, supplierId, incurredOn: nowIso(), createdAt: nowIso() };
+        set((s) => ({
+          expenses: [...s.expenses, e],
+          suppliers: paid ? s.suppliers : s.suppliers.map((x) => (x.id === supplierId ? { ...x, balanceOwedCents: x.balanceOwedCents + amountCents } : x)),
+          feed: [feed("expense", `${s.suppliers.find((x) => x.id === supplierId)?.name ?? "Msambazaji"}: ${description}`, amountCents), ...s.feed].slice(0, 40),
+        }));
+        return e;
+      },
+      pushOutbox: (m) => set((s) => ({ sms: [{ ...m, id: uid("sms"), createdAt: nowIso() }, ...s.sms] })),
 
       pushChat: (m) => set((s) => ({ chat: [...s.chat, { ...m, id: uid("msg"), createdAt: nowIso() }].slice(-80) })),
       clearChat: () => set({ chat: [] }),
