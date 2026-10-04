@@ -1,21 +1,18 @@
 "use client";
 import Link from "next/link";
-import { motion } from "motion/react";
-import { ChevronRight, Languages, MessageSquareText, Moon, RefreshCcw, ShoppingBasket, Smartphone, Sun } from "lucide-react";
+import { ChevronRight, Languages, MessageCircle, MessageSquareText, Moon, RefreshCcw, ShoppingBasket, Smartphone, Sun } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Segmented } from "@/components/ui/Segmented";
 import { useToast } from "@/components/ui/Toast";
 import { useT } from "@/lib/i18n";
 import { useApp } from "@/lib/store/app-store";
-import { formatKES } from "@/lib/utils/money";
 import { formatPhone } from "@/lib/utils/phone";
-import { timeAgo } from "@/lib/utils/dates";
 
 export default function SettingsPage() {
   const t = useT();
   const s = useApp();
   const toast = useToast((x) => x.show);
-  const unmatched = s.mpesa.filter((m) => m.status === "unmatched").slice(0, 5);
+  const unmatched = s.mpesa.filter((m) => m.status === "unmatched").length;
 
   return (
     <div className="px-5">
@@ -42,22 +39,12 @@ export default function SettingsPage() {
         <Link href="/dashboard/settings/outbox" className="flex h-16 items-center gap-3 px-4"><MessageSquareText className="size-5 text-chai" /><span className="flex-1">{t.settings.outbox}</span><span className="money text-sm text-dim">{s.sms.length}</span><ChevronRight className="size-4 text-dim" /></Link>
       </nav>
 
-      {/* M-Pesa dev simulator + unmatched preview (full Reconcile inbox is Phase 4) */}
-      <section className="mt-6 rounded-3xl border border-line bg-raised p-4">
-        <p className="flex items-center gap-2 font-medium"><Smartphone className="size-5 text-sukuma" /> M-Pesa</p>
-        <motion.button whileTap={{ scale: 0.97 }} onClick={() => { const tx = s.simulateMpesa(); toast(`${tx.payerName} · ${formatKES(tx.amountCents)}${tx.status === "matched" ? " ✓" : ""}`); }}
-          className="mt-3 h-14 w-full rounded-2xl bg-sukuma font-medium text-white">{t.settings.simulate}</motion.button>
-        {unmatched.length > 0 && (
-          <ul className="mt-4 divide-y divide-line text-sm">
-            {unmatched.map((m) => (
-              <li key={m.id} className="flex items-center justify-between py-2.5">
-                <span><span className="block">{m.payerName}</span><span className="text-xs text-dim">{m.providerTxId} · {timeAgo(m.createdAt, s.lang)}</span></span>
-                <span className="money text-chai">{formatKES(m.amountCents)}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      <p className="mt-6 mb-2 text-xs uppercase tracking-[0.16em] text-dim">{t.settings.integrations}</p>
+      <nav className="divide-y divide-line rounded-3xl border border-line bg-raised">
+        <Link href="/dashboard/reconcile" className="flex h-16 items-center gap-3 px-4"><Smartphone className="size-5 text-sukuma" /><span className="flex-1">{t.settings.reconcile}</span>{unmatched > 0 && <span className="grid h-6 min-w-6 place-items-center rounded-full bg-flame px-1.5 text-xs font-bold text-[var(--flame-ink)]">{unmatched}</span>}<ChevronRight className="size-4 text-dim" /></Link>
+        <Link href="/dashboard/settings/whatsapp-sim" className="flex h-16 items-center gap-3 px-4"><MessageCircle className="size-5 text-[#25D366]" /><span className="flex-1">{t.settings.whatsappSim}</span><ChevronRight className="size-4 text-dim" /></Link>
+      </nav>
+
 
       <button onClick={() => { s.resetDemo(); toast(t.settings.reset); }} className="mt-6 mb-8 flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-line text-sm text-dim">
         <RefreshCcw className="size-4" /> {t.settings.reset}

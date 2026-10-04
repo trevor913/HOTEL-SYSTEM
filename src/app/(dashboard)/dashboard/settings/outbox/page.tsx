@@ -8,7 +8,7 @@ import { formatPhone } from "@/lib/utils/phone";
 import { timeAgo } from "@/lib/utils/dates";
 import { item, list } from "@/lib/motion";
 
-const KIND: Record<string, string> = { receipt: "bg-sukuma/15 text-sukuma", reminder: "bg-chai/15 text-chai", order: "bg-flame/15 text-flame" };
+const KIND: Record<string, string> = { receipt: "bg-sukuma/15 text-sukuma", reminder: "bg-chai/15 text-chai", order: "bg-flame/15 text-flame", brief: "bg-[#25D366]/15 text-[#25D366]" };
 
 export default function OutboxPage() {
   const t = useT();
@@ -31,7 +31,7 @@ export default function OutboxPage() {
                 <span className={`ml-auto rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${KIND[m.kind] ?? ""}`}>{m.kind}</span>
               </div>
               <p className="mt-2 rounded-2xl rounded-tl-md bg-overlay px-3 py-2.5 text-[15px] leading-relaxed">{m.body}</p>
-              <p className="mt-1.5 text-xs text-dim">{timeAgo(m.createdAt, lang)} · Africa&apos;s Talking (mock)</p>
+              <p className="mt-1.5 text-xs text-dim">{timeAgo(m.createdAt, lang)} · {m.channel === "whatsapp" ? "WhatsApp" : "Africa's Talking"} (mock)</p>
             </motion.li>
           ))}
         </motion.ul>

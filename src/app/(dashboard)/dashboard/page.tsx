@@ -25,6 +25,7 @@ export default function LeoPage() {
   const avg = useMemo(() => avgProfit(s), [s]);
   const lowStock = s.inventory.filter((i) => i.currentQty <= i.lowThreshold);
   const soldOut = s.menu.filter((m) => m.soldOutToday);
+  const unmatched = s.mpesa.filter((m) => m.status === "unmatched").length;
   const pending = s.orders.filter((o) => ["new", "confirmed", "preparing"].includes(o.status)).length;
   const positive = today.profitCents >= 0;
   const g = greetingKey(now);
@@ -58,11 +59,16 @@ export default function LeoPage() {
         </div>
       </section>
 
-      {(pending > 0 || lowStock.length > 0 || soldOut.length > 0) && (
+      {(pending > 0 || unmatched > 0 || lowStock.length > 0 || soldOut.length > 0) && (
         <section className="no-scrollbar flex gap-2 overflow-x-auto px-5 pb-2">
           {pending > 0 && (
             <Link href="/dashboard/oda" className="flex h-11 shrink-0 items-center gap-2 rounded-full bg-[color-mix(in_oklab,var(--flame)_16%,transparent)] px-4 text-sm font-medium text-flame">
               <span className="pulse-ring size-2 rounded-full bg-flame" /> {pending} {t.home.pendingOrders}
+            </Link>
+          )}
+          {unmatched > 0 && (
+            <Link href="/dashboard/reconcile" className="flex h-11 shrink-0 items-center gap-2 rounded-full border border-sukuma/40 px-4 text-sm font-medium text-sukuma">
+              <Smartphone className="size-3.5" /> {unmatched} M-Pesa {t.reconcile.unmatched}
             </Link>
           )}
           {lowStock.map((i) => (

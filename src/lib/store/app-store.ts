@@ -31,7 +31,9 @@ interface AppState extends SeedData {
   advanceOrder: (orderId: string) => Order | undefined;
   sendReminder: (customerId: string) => SmsMessage | undefined;
   simulateMpesa: () => MpesaTxn;
-  matchMpesa: (txId: string, entity: "debt" | "order", entityId: string) => void;
+  matchMpesa: (txId: string, entity: "debt" | "order" | "sale", entityId: string) => void;
+  ingestMpesa: (p: Pick<MpesaTxn, "providerTxId" | "type" | "phone" | "amountCents" | "payerName" | "createdAt">) => MpesaTxn;
+  ignoreMpesa: (txId: string) => void;
   updateStock: (p: { itemId: string; qty: number; mode: "set" | "add" | "subtract" }) => InventoryItem | undefined;
   createOrder: (p: { customerName: string; customerPhone: string; items: { menuItemId: string; qty: number }[]; type: Order["type"]; addressText?: string; placedVia?: Order["placedVia"]; paymentStatus?: Order["paymentStatus"] }) => Order;
   addMenuItem: (p: { name: string; nameSw?: string; category: MenuCategory; priceCents: number; emoji?: string }) => MenuItem;
@@ -164,30 +166,44 @@ export const useApp = create<AppState>()(
           phone: c?.phone ?? "254799000111", amountCents: amount, payerName: (c?.name ?? "WALK IN").toUpperCase(),
           matchedEntity: null, matchedId: null, status: "unmatched", createdAt: nowIso(),
         };
-        const match = autoMatch(tx, {
-          customers: s.customers, debts: s.debts.filter((d) => d.balanceCents > 0),
-          orders: s.orders.map((o) => ({ id: o.id, code: o.code, customerPhone: o.customerPhone, totalCents: o.totalCents, paymentStatus: o.paymentStatus, createdAt: o.createdAt })),
-        });
-        set((st) => ({ mpesa: [tx, ...st.mpesa], feed: [feed("mpesa", `M-Pesa: ${tx.payerName}`, amount), ...st.feed].slice(0, 40) }));
-        if (match.status === "matched") get().matchMpesa(tx.id, match.entity, match.entityId);
-        return get().mpesa.find((m) => m.id === tx.id) ?? tx;
+        return get().ingestMpesa(tx);
       },
 
       matchMpesa: (txId, entity, entityId) => {
         const s = get();
         const tx = s.mpesa.find((m) => m.id === txId);
-        if (!tx) return;
+        if (!tx || tx.status === "matched") return;
+        let matchedId = entityId;
         if (entity === "debt") {
           const d = s.debts.find((x) => x.id === entityId);
           if (d) {
             const owed = s.debts.filter((x) => x.customerId === d.customerId).reduce((a, x) => a + x.balanceCents, 0);
             if (owed > 0) get().recordPayment({ customerId: d.customerId, amountCents: Math.min(tx.amountCents, owed), method: "mpesa" });
           }
-        } else {
+        } else if (entity === "order") {
           set((st) => ({ orders: st.orders.map((o) => (o.id === entityId ? { ...o, paymentStatus: "paid" as const } : o)) }));
+        } else {
+          const sale: Sale = { id: uid("sale"), customerId: s.customers.find((c) => c.phone === tx.phone)?.id ?? null, staffId: "s-mary", totalCents: tx.amountCents, paymentMethod: "mpesa", channel: "walk_in", items: [], mpesaTxId: tx.providerTxId, createdAt: tx.createdAt };
+          matchedId = sale.id;
+          set((st) => ({ sales: [...st.sales, sale] }));
         }
-        set((st) => ({ mpesa: st.mpesa.map((m) => (m.id === txId ? { ...m, status: "matched" as const, matchedEntity: entity, matchedId: entityId } : m)) }));
+        set((st) => ({ mpesa: st.mpesa.map((m) => (m.id === txId ? { ...m, status: "matched" as const, matchedEntity: entity, matchedId } : m)) }));
       },
+
+      ingestMpesa: ({ providerTxId, type, phone, amountCents, payerName, createdAt }) => {
+        const s = get();
+        const existing = s.mpesa.find((m) => m.providerTxId === providerTxId);
+        if (existing) return existing;
+        const tx: MpesaTxn = { id: uid("mp"), providerTxId, type, phone, amountCents, payerName, createdAt, matchedEntity: null, matchedId: null, status: "unmatched" };
+        const match = autoMatch(tx, {
+          customers: s.customers, debts: s.debts.filter((d) => d.balanceCents > 0),
+          orders: s.orders.map((o) => ({ id: o.id, code: o.code, customerPhone: o.customerPhone, totalCents: o.totalCents, paymentStatus: o.paymentStatus, createdAt: o.createdAt })),
+        });
+        set((st) => ({ mpesa: [tx, ...st.mpesa], feed: [feed("mpesa", `M-Pesa: ${tx.payerName}`, amountCents), ...st.feed].slice(0, 40) }));
+        if (match.status === "matched") get().matchMpesa(tx.id, match.entity, match.entityId);
+        return get().mpesa.find((m) => m.id === tx.id) ?? tx;
+      },
+      ignoreMpesa: (txId) => set((s) => ({ mpesa: s.mpesa.map((m) => (m.id === txId ? { ...m, status: "ignored" as const } : m)) })),
 
       updateStock: ({ itemId, qty, mode }) => {
         let out: InventoryItem | undefined;
