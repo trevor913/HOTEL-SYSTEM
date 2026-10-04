@@ -77,6 +77,12 @@ function feed(kind: FeedEvent["kind"], title: string, amountCents: number): Feed
   return { id: uid("f"), kind, title, amountCents, createdAt: nowIso() };
 }
 
+/** Append a money mutation to the offline sync queue (browser only; lazy so SSR never touches IndexedDB). */
+function track(kind: "sale" | "debt" | "payment" | "expense", payload: unknown) {
+  if (typeof window === "undefined") return;
+  void import("../sync/queue").then((m) => m.syncQueue.enqueue(kind, payload)).catch(() => {});
+}
+
 let firstHydration = true;
 
 export const useApp = create<AppState>()(
@@ -113,8 +119,8 @@ export const useApp = create<AppState>()(
         set((s) => ({
           sales: [...s.sales, sale],
           feed: [feed(method === "mpesa" ? "mpesa" : "sale", title, total), ...s.feed].slice(0, 40),
-          pendingSync: typeof navigator !== "undefined" && !navigator.onLine ? s.pendingSync + 1 : s.pendingSync,
         }));
+        track("sale", sale);
         if (method === "debt" && customerId) get().logDebt({ customerId, amountCents: total, description: title });
         return sale;
       },
@@ -123,6 +129,7 @@ export const useApp = create<AppState>()(
         const debt: Debt = { id: uid("d"), customerId, amountCents, balanceCents: amountCents, status: "open", description, createdAt: nowIso(), settledAt: null };
         const name = get().customers.find((c) => c.id === customerId)?.name ?? "Mteja";
         set((s) => ({ debts: [...s.debts, debt], feed: [feed("debt_new", `Deni: ${name}`, amountCents), ...s.feed].slice(0, 40) }));
+        track("debt", debt);
         return debt;
       },
 
@@ -149,12 +156,14 @@ export const useApp = create<AppState>()(
           ? [{ id: uid("sms"), to: cust.phone, toName: cust.name, kind: "receipt", status: "sent", createdAt: nowIso(), body: receiptSms({ name: cust.name.split(" ")[0]!, paidCents: paid, balanceCents: balance, hotelName: s.hotel.name }) }]
           : [];
         set({ debts, debtPayments: [...s.debtPayments, ...payments], sms: [...sms, ...s.sms], feed: [feed("debt_paid", `${cust?.name ?? "Mteja"} amelipa deni`, paid), ...s.feed].slice(0, 40) });
+        if (payments.length) track("payment", payments);
         return { paidCents: paid, balanceCents: balance, settled: balance === 0 };
       },
 
       logExpense: ({ category, description, amountCents }) => {
         const e: Expense = { id: uid("ex"), category, description, amountCents, supplierId: null, incurredOn: nowIso(), createdAt: nowIso() };
         set((s) => ({ expenses: [...s.expenses, e], feed: [feed("expense", description, amountCents), ...s.feed].slice(0, 40) }));
+        track("expense", e);
         return e;
       },
 

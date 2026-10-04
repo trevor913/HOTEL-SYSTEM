@@ -11,6 +11,7 @@ import { MsaidiziLauncher } from "./MsaidiziLauncher";
 import { PinLock } from "./PinLock";
 import { OrderAlerts } from "./OrderAlerts";
 import { Tour } from "./Tour";
+import { SyncAgent } from "./SyncAgent";
 import { useT } from "@/lib/i18n";
 import { useApp } from "@/lib/store/app-store";
 import { cn } from "@/lib/utils/cn";
@@ -90,6 +91,7 @@ function Shell({ children }: { children: ReactNode }) {
       <PinLock />
       <OrderAlerts />
       <Tour />
+      <SyncAgent />
 
       {/* Bottom tab bar: thumb zone (mobile) */}
       <nav className="bottom-tabs fixed inset-x-0 z-40 border-t border-line bg-bg/95 backdrop-blur-md lg:hidden" aria-label="Main">
