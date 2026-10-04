@@ -38,3 +38,13 @@ describe("§8.8 reports", () => {
     expect(csv.length).toBeGreaterThan(5);
   });
 });
+
+import { DISHES, slugify } from "@/lib/demo/dishes";
+describe("§8.10 onboarding data", () => {
+  it("20 dishes with unique keys and prices", () => {
+    expect(DISHES).toHaveLength(20);
+    expect(new Set(DISHES.map((d) => d.key)).size).toBe(20);
+    expect(DISHES.every((d) => d.kes > 0)).toBe(true);
+  });
+  it("slugify", () => { expect(slugify("Mama Wanjiru's Hotel!")).toBe("mama-wanjiru-s-hotel"); expect(slugify("  ")).toBe("hotel"); });
+});

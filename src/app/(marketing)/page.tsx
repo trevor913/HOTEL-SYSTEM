@@ -1,53 +1,44 @@
 import Link from "next/link";
-import { ArrowRight, NotebookPen, Smartphone, Bot, ChefHat } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { Ticker } from "@/components/landing/Ticker";
+import { Hero3D } from "@/components/landing/Hero3D";
+import { ProblemStory } from "@/components/landing/ProblemStory";
+import { MagicScene } from "@/components/landing/MagicScene";
+import { Bento } from "@/components/landing/Bento";
+import { Numbers } from "@/components/landing/Numbers";
+import { Footer, Personas, Pricing } from "@/components/landing/Sections";
 
-/**
- * Landing v0 (mobile-first). Phase 8 upgrades this with the R3F night-market hero,
- * GSAP scroll scenes, bento live demos, testimonials and pricing.
- */
+/** Landing (§9.8): 3D hero → problem storyboard → magic → bento → numbers → personas → pricing → footer. */
 export default function Landing() {
   return (
-    <main className="min-h-dvh bg-bg text-ink">
-      <div className="ember grain">
-        <header className="mx-auto flex max-w-5xl items-center justify-between px-5 pt-safe pb-4">
+    <main className="min-h-dvh overflow-x-clip bg-bg text-ink">
+      <section className="relative isolate flex min-h-[100svh] flex-col overflow-hidden">
+        <Hero3D />
+        <div className="pointer-events-none absolute inset-0 -z-[5] bg-gradient-to-t from-bg via-bg/50 to-transparent lg:bg-gradient-to-r lg:from-bg lg:via-bg/55 lg:to-transparent" />
+        <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 pt-safe">
           <Logo className="mt-4 text-xl" />
-          <Link href="/dashboard" className="mt-4 text-sm text-dim hover:text-ink">Ingia</Link>
+          <Link href="/dashboard" className="mt-4 flex h-11 items-center rounded-full px-4 text-sm text-dim hover:text-ink">Ingia</Link>
         </header>
-        <section className="mx-auto max-w-5xl px-5 pt-10 pb-14 lg:pt-20">
+        <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col justify-end px-5 pb-8 lg:justify-center lg:pb-0">
           <p className="text-sm uppercase tracking-[0.2em] text-flame">Biashara yako. Kwenye simu yako.</p>
-          <h1 className="mt-4 max-w-[14ch] font-display text-[44px] leading-[1.02] font-semibold lg:text-7xl">Hotel yako. Digital. Leo.</h1>
-          <p className="mt-5 max-w-md text-lg text-dim">Daftari la madeni linapoteza pesa. Hotel System inakumbuka kila deni, inalinganisha M-Pesa, na inakuambia faida ya leo kabla hujafunga.</p>
+          <h1 className="mt-4 max-w-[12ch] font-display text-[46px] leading-[1.0] font-semibold lg:text-[88px]">Hotel yako. Digital. Leo.</h1>
+          <p className="mt-5 max-w-md text-lg text-ink/80">Madeni, M-Pesa, oda na faida ya leo, kwa Kiswahili. Msaidizi anaandika ukiongea.</p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link href="/dashboard" className="flex h-14 items-center justify-center gap-2 rounded-2xl bg-flame px-7 font-display text-lg font-semibold text-[var(--flame-ink)]">Anza Bure <ArrowRight className="size-5" /></Link>
-            <Link href="/dashboard/msaidizi" className="flex h-14 items-center justify-center rounded-2xl border border-line px-7 font-medium">Ongea na Msaidizi</Link>
+            <Link href="/onboarding" className="flex h-14 items-center justify-center gap-2 rounded-2xl bg-flame px-7 font-display text-lg font-semibold text-[var(--flame-ink)] shadow-[0_16px_40px_-14px_var(--flame)]">Anza Bure <ArrowRight className="size-5" /></Link>
+            <Link href="/dashboard" className="flex h-14 items-center justify-center rounded-2xl border border-line bg-bg/40 px-7 font-medium backdrop-blur-sm">Ona demo</Link>
           </div>
-        </section>
-        <Ticker />
-      </div>
-
-      <section className="mx-auto grid max-w-5xl gap-3 px-5 py-14 sm:grid-cols-6">
-        <Feature className="sm:col-span-4" icon={<NotebookPen className="size-6 text-nyanya" />} title="Madeni hayapotei tena" body="Kila deni na jina, tarehe na salio. Telezesha kulia kulipa, kushoto kutuma kumbusho la SMS. Deni likiisha, mteja anapata risiti." />
-        <Feature className="sm:col-span-2" icon={<Smartphone className="size-6 text-sukuma" />} title="M-Pesa inajilinganisha" body="Malipo yanafika, yanaunganishwa na deni au oda yenyewe." />
-        <Feature className="sm:col-span-2" icon={<Bot className="size-6 text-flame" />} title="Msaidizi anaelewa Sheng" body="“Andika deni ya Otieno mia mbili hamsini.” Imeandikwa." />
-        <Feature className="sm:col-span-4" icon={<ChefHat className="size-6 text-chai" />} title="Oda kutoka kwa menyu yako" body="Wateja wanaona menyu ya leo kwenye simu, wanaagiza, unapata ding. Rider anabeba, mteja anapata SMS kila hatua." />
+        </div>
+        <div className="pt-6"><Ticker /></div>
       </section>
 
-      <footer className="border-t border-line px-5 py-10 text-center text-sm text-dim">
-        <Logo className="text-lg" />
-        <p className="mt-3">Imetengenezwa Nairobi kwa Mama na Baba Hotel.</p>
-      </footer>
+      <ProblemStory />
+      <MagicScene />
+      <Bento />
+      <Numbers />
+      <Personas />
+      <Pricing />
+      <Footer />
     </main>
-  );
-}
-
-function Feature({ icon, title, body, className }: { icon: React.ReactNode; title: string; body: string; className?: string }) {
-  return (
-    <article className={`rounded-3xl border border-line bg-raised p-6 ${className ?? ""}`}>
-      {icon}
-      <h2 className="mt-4 font-display text-xl font-semibold">{title}</h2>
-      <p className="mt-2 text-dim">{body}</p>
-    </article>
   );
 }

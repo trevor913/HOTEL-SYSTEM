@@ -11,6 +11,7 @@ import { autoMatch } from "../domain/automatch";
 import type { ChatMessage, Debt, Expense, ExpenseCategory, FeedEvent, InventoryItem, MenuCategory, MenuItem, MpesaTxn, Order, OrderStatus, Sale, SaleItem, SmsMessage, SoldOutEvent, StockMove, SupplierPayment, WagePayment, WasteEvent } from "../types";
 import { seedOps, shiftKey } from "./seed-ops";
 import { businessDayStart } from "../utils/dates";
+import { slugify } from "../demo/dishes";
 import { generateSeed, type SeedData } from "./seed";
 
 export const ORDER_FLOW: OrderStatus[] = ["new", "preparing", "ready", "out_for_delivery", "delivered"];
@@ -28,6 +29,10 @@ interface AppState extends SeedData {
   soldOutLog: SoldOutEvent[];
   wasteLog: WasteEvent[];
   pinLock: boolean;
+  onboarded: boolean;
+  tourPending: boolean;
+  completeOnboarding: (p: { hotelName: string; ownerName: string; locationText: string; openHours: { open: string; close: string }; tillNumber: string; phone: string; dishes: Omit<MenuItem, "id" | "isAvailable" | "soldOutToday" | "sortOrder">[] }) => void;
+  finishTour: () => void;
   locked: boolean;
   activeStaffId: string;
   paySupplier: (p: { supplierId: string; amountCents: number; method: "cash" | "mpesa" }) => void;
@@ -88,6 +93,8 @@ export const useApp = create<AppState>()(
       stockMoves: [],
       wagePayments: [],
       pinLock: false,
+      onboarded: false,
+      tourPending: false,
       locked: false,
       activeStaffId: "s-mary",
       setLang: (lang) => set({ lang }),
@@ -313,11 +320,25 @@ export const useApp = create<AppState>()(
       },
       lock: () => { if (get().pinLock) set({ locked: true }); },
 
+      completeOnboarding: ({ hotelName, ownerName, locationText, openHours, tillNumber, phone, dishes }) => {
+        const prev = get();
+        const menu: MenuItem[] = dishes.map((d, i) => ({ ...d, id: `m-${slugify(d.name)}-${i}`, isAvailable: true, soldOutToday: false, sortOrder: i }));
+        set({
+          hotel: { ...prev.hotel, id: uid("h"), name: hotelName, slug: slugify(hotelName), ownerName, locationText, openHours, tillNumber: tillNumber || "", phone: phone || prev.hotel.phone, tagline: "Chakula kitamu, bei poa." },
+          menu, customers: [], debts: [], debtPayments: [], sales: [], expenses: [], orders: [], mpesa: [], feed: [], sms: [], chat: [],
+          suppliers: [], supplierPayments: [], stockMoves: [], wagePayments: [], soldOutLog: [], wasteLog: [], shifts: {},
+          inventory: prev.inventory.map((i) => ({ ...i })),
+          staff: [{ id: "s-owner", name: ownerName, role: "owner", dailyWageCents: 0, pin: "1234" }], activeStaffId: "s-owner",
+          onboarded: true, tourPending: true, locked: false, pendingSync: 0, seededAt: nowIso(),
+        });
+      },
+      finishTour: () => set({ tourPending: false }),
+
       pushOutbox: (m) => set((s) => ({ sms: [{ ...m, id: uid("sms"), createdAt: nowIso() }, ...s.sms] })),
 
       pushChat: (m) => set((s) => ({ chat: [...s.chat, { ...m, id: uid("msg"), createdAt: nowIso() }].slice(-80) })),
       clearChat: () => set({ chat: [] }),
-      resetDemo: () => set({ ...generateSeed(), ...seedOps(), sms: [], chat: [], pendingSync: 0, supplierPayments: [], stockMoves: [], wagePayments: [], locked: false, activeStaffId: "s-mary" }),
+      resetDemo: () => set({ ...generateSeed(), ...seedOps(), onboarded: false, tourPending: false, sms: [], chat: [], pendingSync: 0, supplierPayments: [], stockMoves: [], wagePayments: [], locked: false, activeStaffId: "s-mary" }),
     }),
     {
       name: "hotel-system:v1",
@@ -325,7 +346,7 @@ export const useApp = create<AppState>()(
       version: 1,
       onRehydrateStorage: () => (state) => {
         // Demo mode: re-seed a snapshot older than 2 days so "today" always has life.
-        if (state && Date.now() - new Date(state.seededAt).getTime() > 2 * 86_400_000) state.resetDemo();
+        if (state && !state.onboarded && Date.now() - new Date(state.seededAt).getTime() > 2 * 86_400_000) state.resetDemo();
         // PIN lock: always start locked when enabled.
         if (state?.pinLock && firstHydration) setTimeout(() => useApp.setState({ locked: true }), 0);
         firstHydration = false;
