@@ -8,7 +8,9 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { allocatePayment, receiptSms, reminderSms, settleAll, type DebtLike } from "../domain/debts";
 import { autoMatch } from "../domain/automatch";
-import type { ChatMessage, Debt, Expense, ExpenseCategory, FeedEvent, InventoryItem, MenuCategory, MenuItem, MpesaTxn, Order, OrderStatus, Sale, SaleItem, SmsMessage } from "../types";
+import type { ChatMessage, Debt, Expense, ExpenseCategory, FeedEvent, InventoryItem, MenuCategory, MenuItem, MpesaTxn, Order, OrderStatus, Sale, SaleItem, SmsMessage, SoldOutEvent, StockMove, SupplierPayment, WagePayment, WasteEvent } from "../types";
+import { seedOps, shiftKey } from "./seed-ops";
+import { businessDayStart } from "../utils/dates";
 import { generateSeed, type SeedData } from "./seed";
 
 export const ORDER_FLOW: OrderStatus[] = ["new", "preparing", "ready", "out_for_delivery", "delivered"];
@@ -19,6 +21,23 @@ interface AppState extends SeedData {
   sms: SmsMessage[];
   chat: ChatMessage[];
   pendingSync: number;
+  supplierPayments: SupplierPayment[];
+  stockMoves: StockMove[];
+  wagePayments: WagePayment[];
+  shifts: Record<string, boolean>;
+  soldOutLog: SoldOutEvent[];
+  wasteLog: WasteEvent[];
+  pinLock: boolean;
+  locked: boolean;
+  activeStaffId: string;
+  paySupplier: (p: { supplierId: string; amountCents: number; method: "cash" | "mpesa" }) => void;
+  setStockLevels: (itemId: string, p: { lowThreshold: number; maxQty: number }) => void;
+  toggleShift: (date: string, staffId: string) => void;
+  payWages: (staffId: string, amountCents: number) => void;
+  logWaste: (itemId: string, qty: number) => void;
+  setPinLock: (on: boolean) => void;
+  unlock: (staffId: string, pin: string) => boolean;
+  lock: () => void;
   setLang: (l: "sw" | "en") => void;
   setTheme: (t: "dark" | "light") => void;
   logSale: (p: { items: { menuItemId: string; qty: number }[]; method: Sale["paymentMethod"]; customerId?: string | null; channel?: Sale["channel"] }) => Sale;
@@ -34,7 +53,7 @@ interface AppState extends SeedData {
   matchMpesa: (txId: string, entity: "debt" | "order" | "sale", entityId: string) => void;
   ingestMpesa: (p: Pick<MpesaTxn, "providerTxId" | "type" | "phone" | "amountCents" | "payerName" | "createdAt">) => MpesaTxn;
   ignoreMpesa: (txId: string) => void;
-  updateStock: (p: { itemId: string; qty: number; mode: "set" | "add" | "subtract" }) => InventoryItem | undefined;
+  updateStock: (p: { itemId: string; qty: number; mode: "set" | "add" | "subtract"; reason?: StockMove["reason"] }) => InventoryItem | undefined;
   createOrder: (p: { customerName: string; customerPhone: string; items: { menuItemId: string; qty: number }[]; type: Order["type"]; addressText?: string; placedVia?: Order["placedVia"]; paymentStatus?: Order["paymentStatus"] }) => Order;
   addMenuItem: (p: { name: string; nameSw?: string; category: MenuCategory; priceCents: number; emoji?: string }) => MenuItem;
   updateMenuItem: (id: string, patch: Partial<Omit<MenuItem, "id">>) => void;
@@ -62,6 +81,13 @@ export const useApp = create<AppState>()(
       sms: [],
       chat: [],
       pendingSync: 0,
+      ...seedOps(),
+      supplierPayments: [],
+      stockMoves: [],
+      wagePayments: [],
+      pinLock: false,
+      locked: false,
+      activeStaffId: "s-mary",
       setLang: (lang) => set({ lang }),
       setTheme: (theme) => set({ theme }),
 
@@ -73,7 +99,7 @@ export const useApp = create<AppState>()(
           return { menuItemId: m.id, qty: i.qty, unitPriceCents: m.priceCents, lineTotalCents: m.priceCents * i.qty };
         });
         const total = saleItems.reduce((a, i) => a + i.lineTotalCents, 0);
-        const sale: Sale = { id: uid("sale"), customerId, staffId: "s-mary", totalCents: total, paymentMethod: method, channel, items: saleItems, createdAt: nowIso() };
+        const sale: Sale = { id: uid("sale"), customerId, staffId: get().activeStaffId, totalCents: total, paymentMethod: method, channel, items: saleItems, createdAt: nowIso() };
         const title = saleItems.map((i) => `${i.qty}× ${menu.find((m) => m.id === i.menuItemId)!.name}`).join(", ");
         set((s) => ({
           sales: [...s.sales, sale],
@@ -123,7 +149,11 @@ export const useApp = create<AppState>()(
         return e;
       },
 
-      setSoldOut: (id, soldOut) => set((s) => ({ menu: s.menu.map((m) => (m.id === id ? { ...m, soldOutToday: soldOut } : m)) })),
+      setSoldOut: (id, soldOut) => set((s) => {
+        const today = businessDayStart(new Date(), 0).getTime();
+        const log = s.soldOutLog.filter((e) => !(e.itemId === id && new Date(e.at).getTime() >= today));
+        return { menu: s.menu.map((m) => (m.id === id ? { ...m, soldOutToday: soldOut } : m)), soldOutLog: soldOut ? [...log, { id: uid("so"), itemId: id, at: nowIso() }] : log };
+      }),
       toggleAvailable: (id) => set((s) => ({ menu: s.menu.map((m) => (m.id === id ? { ...m, isAvailable: !m.isAvailable } : m)) })),
 
       advanceOrder: (orderId) => {
@@ -183,7 +213,7 @@ export const useApp = create<AppState>()(
         } else if (entity === "order") {
           set((st) => ({ orders: st.orders.map((o) => (o.id === entityId ? { ...o, paymentStatus: "paid" as const } : o)) }));
         } else {
-          const sale: Sale = { id: uid("sale"), customerId: s.customers.find((c) => c.phone === tx.phone)?.id ?? null, staffId: "s-mary", totalCents: tx.amountCents, paymentMethod: "mpesa", channel: "walk_in", items: [], mpesaTxId: tx.providerTxId, createdAt: tx.createdAt };
+          const sale: Sale = { id: uid("sale"), customerId: s.customers.find((c) => c.phone === tx.phone)?.id ?? null, staffId: get().activeStaffId, totalCents: tx.amountCents, paymentMethod: "mpesa", channel: "walk_in", items: [], mpesaTxId: tx.providerTxId, createdAt: tx.createdAt };
           matchedId = sale.id;
           set((st) => ({ sales: [...st.sales, sale] }));
         }
@@ -205,16 +235,22 @@ export const useApp = create<AppState>()(
       },
       ignoreMpesa: (txId) => set((s) => ({ mpesa: s.mpesa.map((m) => (m.id === txId ? { ...m, status: "ignored" as const } : m)) })),
 
-      updateStock: ({ itemId, qty, mode }) => {
+      updateStock: ({ itemId, qty, mode, reason }) => {
         let out: InventoryItem | undefined;
+        let delta = 0;
         set((s) => ({
           inventory: s.inventory.map((i) => {
             if (i.id !== itemId) return i;
-            const next = mode === "set" ? qty : mode === "add" ? i.currentQty + qty : i.currentQty - qty;
-            out = { ...i, currentQty: Math.max(0, Math.round(next * 100) / 100) };
+            const next = Math.max(0, Math.round((mode === "set" ? qty : mode === "add" ? i.currentQty + qty : i.currentQty - qty) * 100) / 100);
+            delta = Math.round((next - i.currentQty) * 100) / 100;
+            out = { ...i, currentQty: next };
             return out;
           }),
         }));
+        if (out && delta !== 0) {
+          const r = reason ?? (mode === "add" ? "purchase" : mode === "subtract" ? "usage" : "adjust");
+          set((s) => ({ stockMoves: [{ id: uid("sm"), itemId, delta, reason: r, createdAt: nowIso() }, ...s.stockMoves].slice(0, 200) }));
+        }
         return out;
       },
 
@@ -250,11 +286,36 @@ export const useApp = create<AppState>()(
         }));
         return e;
       },
+      paySupplier: ({ supplierId, amountCents, method }) => set((s) => ({
+        supplierPayments: [{ id: uid("spay"), supplierId, amountCents, method, createdAt: nowIso() }, ...s.supplierPayments],
+        suppliers: s.suppliers.map((x) => (x.id === supplierId ? { ...x, balanceOwedCents: Math.max(0, x.balanceOwedCents - amountCents) } : x)),
+      })),
+      setStockLevels: (itemId, { lowThreshold, maxQty }) => set((s) => ({ inventory: s.inventory.map((i) => (i.id === itemId ? { ...i, lowThreshold, maxQty: Math.max(maxQty, lowThreshold) } : i)) })),
+      toggleShift: (date, staffId) => set((s) => { const k = shiftKey(date, staffId); return { shifts: { ...s.shifts, [k]: !s.shifts[k] } }; }),
+      payWages: (staffId, amountCents) => {
+        const st = get().staff.find((x) => x.id === staffId);
+        if (!st || amountCents <= 0) return;
+        set((s) => ({
+          wagePayments: [{ id: uid("wp"), staffId, amountCents, createdAt: nowIso() }, ...s.wagePayments],
+          expenses: [...s.expenses, { id: uid("ex"), category: "wages" as const, description: `Karo: ${st.name}`, amountCents, supplierId: null, incurredOn: nowIso(), createdAt: nowIso() }],
+          feed: [feed("expense", `Karo: ${st.name}`, amountCents), ...s.feed].slice(0, 40),
+        }));
+      },
+      logWaste: (itemId, qty) => set((s) => ({ wasteLog: [...s.wasteLog, { id: uid("w"), itemId, qty, at: nowIso() }] })),
+      setPinLock: (pinLock) => set({ pinLock, locked: false }),
+      unlock: (staffId, pin) => {
+        const st = get().staff.find((x) => x.id === staffId);
+        if (!st || st.pin !== pin) return false;
+        set({ locked: false, activeStaffId: staffId });
+        return true;
+      },
+      lock: () => { if (get().pinLock) set({ locked: true }); },
+
       pushOutbox: (m) => set((s) => ({ sms: [{ ...m, id: uid("sms"), createdAt: nowIso() }, ...s.sms] })),
 
       pushChat: (m) => set((s) => ({ chat: [...s.chat, { ...m, id: uid("msg"), createdAt: nowIso() }].slice(-80) })),
       clearChat: () => set({ chat: [] }),
-      resetDemo: () => set({ ...generateSeed(), sms: [], chat: [], pendingSync: 0 }),
+      resetDemo: () => set({ ...generateSeed(), ...seedOps(), sms: [], chat: [], pendingSync: 0, supplierPayments: [], stockMoves: [], wagePayments: [], locked: false, activeStaffId: "s-mary" }),
     }),
     {
       name: "hotel-system:v1",
@@ -263,6 +324,8 @@ export const useApp = create<AppState>()(
       onRehydrateStorage: () => (state) => {
         // Demo mode: re-seed a snapshot older than 2 days so "today" always has life.
         if (state && Date.now() - new Date(state.seededAt).getTime() > 2 * 86_400_000) state.resetDemo();
+        // PIN lock: always start locked when enabled.
+        if (state?.pinLock) setTimeout(() => useApp.setState({ locked: true }), 0);
       },
     },
   ),

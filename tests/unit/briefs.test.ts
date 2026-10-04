@@ -39,3 +39,24 @@ describe("live agent history", () => {
     expect(h[0]!.content).toBe("a\nb");
   });
 });
+
+import { planHistory, wageSummary, staffSales } from "@/lib/store/selectors";
+import { seedOps } from "@/lib/store/seed-ops";
+
+describe("§8.5–8.6 ops selectors", () => {
+  const ops = seedOps(now);
+  it("plan history carries sold-out times and waste", () => {
+    const h = planHistory({ ...seed, ...ops }, now);
+    expect(h.some((r) => r.soldoutAt)).toBe(true);
+    expect(h.every((r) => r.cookedQty >= r.soldQty)).toBe(true);
+  });
+  it("wages = present days × daily wage − paid", () => {
+    const w = wageSummary({ staff: seed.staff, shifts: ops.shifts, wagePayments: [] }, "s-grace", now);
+    const grace = seed.staff.find((x) => x.id === "s-grace")!;
+    expect(w.earnedCents).toBe(w.days * grace.dailyWageCents);
+    const paid = wageSummary({ staff: seed.staff, shifts: ops.shifts, wagePayments: [{ id: "p", staffId: "s-grace", amountCents: w.earnedCents, createdAt: now.toISOString() }] }, "s-grace", now);
+    expect(paid.dueCents).toBe(0);
+  });
+  it("owner earns no wage", () => expect(wageSummary({ staff: seed.staff, shifts: ops.shifts, wagePayments: [] }, "s-mary", now).earnedCents).toBe(0));
+  it("staff sales attributed", () => expect(staffSales(seed, "s-grace", 7, now).count).toBeGreaterThan(0));
+});

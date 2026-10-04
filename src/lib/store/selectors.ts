@@ -1,5 +1,6 @@
 import { businessDayStart, daysBetween, inBusinessDay } from "../utils/dates";
-import type { Customer, Debt, Expense, MenuItem, Sale } from "../types";
+import type { Customer, Debt, Expense, MenuItem, Sale, SoldOutEvent, Staff, WagePayment, WasteEvent } from "../types";
+import { dateKey } from "./seed-ops";
 import type { DayItemRecord } from "../domain/planner";
 
 export function dayTotals(s: { sales: Sale[]; expenses: Expense[]; debts: Debt[] }, daysAgo = 0, now = new Date()) {
@@ -74,25 +75,52 @@ export function priceSeries(expenses: Expense[], match: string, days = 14, now =
   return out;
 }
 
-/** Per-item daily sold quantities for the last N business days (planner input). */
-export function planHistory(s: { sales: Sale[]; menu: MenuItem[] }, now = new Date(), days = 21): DayItemRecord[] {
+/** Per-item daily records for the last N business days (planner input), incl. sold-out times and waste. */
+export function planHistory(
+  s: { sales: Sale[]; menu: MenuItem[]; soldOutLog?: SoldOutEvent[]; wasteLog?: WasteEvent[] }, now = new Date(), days = 21,
+): (DayItemRecord & { daysAgo: number })[] {
   const base = businessDayStart(now, 0).getTime();
+  const idxOf = (iso: string) => { const t = new Date(iso).getTime(); return t >= base ? 0 : Math.floor((base - t) / 86_400_000) + 1; };
   const counts = new Map<string, number>();
   for (const sale of s.sales) {
-    const t = new Date(sale.createdAt).getTime();
-    if (t >= base) continue;
-    const idx = Math.floor((base - t) / 86_400_000) + 1;
-    if (idx > days) continue;
+    const idx = idxOf(sale.createdAt);
+    if (idx === 0 || idx > days) continue;
     for (const it of sale.items) counts.set(`${idx}|${it.menuItemId}`, (counts.get(`${idx}|${it.menuItemId}`) ?? 0) + it.qty);
   }
-  const out: DayItemRecord[] = [];
+  const soldOut = new Map<string, string>();
+  for (const e of s.soldOutLog ?? []) { const i = idxOf(e.at); if (i > 0 && i <= days) soldOut.set(`${i}|${e.itemId}`, e.at); }
+  const waste = new Map<string, number>();
+  for (const e of s.wasteLog ?? []) { const i = idxOf(e.at); if (i > 0 && i <= days) waste.set(`${i}|${e.itemId}`, (waste.get(`${i}|${e.itemId}`) ?? 0) + e.qty); }
+  const out: (DayItemRecord & { daysAgo: number })[] = [];
   for (let i = 1; i <= days; i++) {
-    const d = businessDayStart(now, i);
-    const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const date = dateKey(businessDayStart(now, i));
     for (const m of s.menu) {
-      const sold = counts.get(`${i}|${m.id}`) ?? 0;
-      out.push({ date, itemId: m.id, soldQty: sold, cookedQty: sold, soldoutAt: null, wasteQty: 0 });
+      const k = `${i}|${m.id}`;
+      const sold = counts.get(k) ?? 0;
+      const w = waste.get(k) ?? 0;
+      out.push({ date, daysAgo: i, itemId: m.id, soldQty: sold, cookedQty: sold + w, soldoutAt: soldOut.get(k) ?? null, wasteQty: w });
     }
   }
   return out;
+}
+
+/** Last 7 business days: present-days × daily wage minus wages paid in that window. */
+export function wageSummary(
+  s: { staff: Staff[]; shifts: Record<string, boolean>; wagePayments: WagePayment[] }, staffId: string, now = new Date(),
+) {
+  const st = s.staff.find((x) => x.id === staffId);
+  if (!st) return { days: 0, earnedCents: 0, paidCents: 0, dueCents: 0, dates: [] as { date: string; present: boolean }[] };
+  const dates = Array.from({ length: 7 }, (_, i) => { const date = dateKey(businessDayStart(now, 6 - i)); return { date, present: !!s.shifts[`${date}|${staffId}`] }; });
+  const days = dates.filter((d) => d.present).length;
+  const since = businessDayStart(now, 6).getTime();
+  const paidCents = s.wagePayments.filter((p) => p.staffId === staffId && new Date(p.createdAt).getTime() >= since).reduce((a, p) => a + p.amountCents, 0);
+  const earnedCents = st.role === "owner" ? 0 : days * st.dailyWageCents;
+  return { days, earnedCents, paidCents, dueCents: Math.max(0, earnedCents - paidCents), dates };
+}
+
+/** Sales attributed to a staff member over N days. */
+export function staffSales(s: { sales: Sale[] }, staffId: string, days = 7, now = new Date()) {
+  const since = businessDayStart(now, days - 1).getTime();
+  const rows = s.sales.filter((x) => x.staffId === staffId && new Date(x.createdAt).getTime() >= since);
+  return { count: rows.length, cents: rows.reduce((a, x) => a + x.totalCents, 0) };
 }

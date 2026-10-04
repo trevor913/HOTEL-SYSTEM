@@ -39,7 +39,7 @@ export default function LeoPage() {
             <p className="text-sm text-dim">{t.greet[g]}, {s.hotel.ownerName} {g === "morning" ? "🌅" : ""}</p>
             <p className="text-xs text-dim/80">{s.hotel.name} · {now.toLocaleDateString(lang === "sw" ? "sw-KE" : "en-KE", { weekday: "long", day: "numeric", month: "long" })}</p>
           </div>
-          <Link href="/dashboard/settings" aria-label={t.nav.settings} className="grid size-11 place-items-center rounded-full bg-overlay font-display font-semibold text-chai">MM</Link>
+          <Link href="/dashboard/zaidi" aria-label={t.nav.more} className="grid size-11 place-items-center rounded-full bg-overlay font-display font-semibold text-chai">MM</Link>
         </div>
 
         <div className="mt-7">

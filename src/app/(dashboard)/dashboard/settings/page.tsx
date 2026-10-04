@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { ChevronRight, Languages, MessageCircle, MessageSquareText, Moon, RefreshCcw, ShoppingBasket, Smartphone, Sun } from "lucide-react";
+import { ChevronRight, Languages, LayoutGrid, Lock, MessageCircle, MessageSquareText, Moon, RefreshCcw, ShoppingBasket, Smartphone, Sun } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Segmented } from "@/components/ui/Segmented";
 import { useToast } from "@/components/ui/Toast";
@@ -45,6 +45,16 @@ export default function SettingsPage() {
         <Link href="/dashboard/settings/whatsapp-sim" className="flex h-16 items-center gap-3 px-4"><MessageCircle className="size-5 text-[#25D366]" /><span className="flex-1">{t.settings.whatsappSim}</span><ChevronRight className="size-4 text-dim" /></Link>
       </nav>
 
+      <p className="mt-6 mb-2 text-xs uppercase tracking-[0.16em] text-dim">{t.ops.security}</p>
+      <div className="divide-y divide-line rounded-3xl border border-line bg-raised">
+        <button onClick={() => s.setPinLock(!s.pinLock)} role="switch" aria-checked={s.pinLock} className="flex min-h-16 w-full items-center gap-3 px-4 text-left">
+          <Lock className="size-5 text-flame" />
+          <span className="flex-1"><span className="block">{t.ops.pinLock}</span><span className="text-xs text-dim">{t.ops.pinLockBody}</span></span>
+          <span className={`relative h-7 w-12 rounded-full transition-colors ${s.pinLock ? "bg-sukuma" : "bg-overlay"}`}><span className={`absolute top-1 size-5 rounded-full bg-white transition-all ${s.pinLock ? "left-6" : "left-1"}`} /></span>
+        </button>
+        {s.pinLock && <button onClick={s.lock} className="flex h-14 w-full items-center gap-3 px-4 text-left text-sm"><Lock className="size-4 text-dim" />{t.ops.lockNow}</button>}
+        <Link href="/dashboard/zaidi" className="flex h-14 items-center gap-3 px-4 text-sm"><LayoutGrid className="size-4 text-dim" /><span className="flex-1">{t.ops.more}</span><ChevronRight className="size-4 text-dim" /></Link>
+      </div>
 
       <button onClick={() => { s.resetDemo(); toast(t.settings.reset); }} className="mt-6 mb-8 flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-line text-sm text-dim">
         <RefreshCcw className="size-4" /> {t.settings.reset}

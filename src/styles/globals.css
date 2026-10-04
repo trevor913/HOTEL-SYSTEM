@@ -68,3 +68,7 @@
 
 @keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--flame) 55%, transparent); } 100% { box-shadow: 0 0 0 12px transparent; } }
 .pulse-ring { animation: pulse-ring 1.6s var(--ease-steam) infinite; }
+
+@layer components {
+  .input { @apply h-14 w-full rounded-2xl border border-line bg-overlay px-4 text-base text-ink outline-none placeholder:text-dim focus:border-flame; }
+}

@@ -10,7 +10,7 @@ export interface Hotel { id: ID; slug: string; name: string; tagline: string; ow
 export interface Customer { id: ID; name: string; nickname?: string; phone: string | null; notes?: string; totalSpentCents: number; visitCount: number; loyaltyPoints: number; lastSeenAt: string; createdAt: string }
 export interface Debt { id: ID; customerId: ID; amountCents: number; balanceCents: number; status: DebtStatus; description: string; createdAt: string; settledAt: string | null }
 export interface DebtPayment { id: ID; debtId: ID; amountCents: number; method: "cash" | "mpesa" | "other"; mpesaTxId?: string; createdAt: string }
-export interface MenuItem { id: ID; name: string; nameSw: string; category: MenuCategory; priceCents: number; emoji: string; hue: number; isAvailable: boolean; soldOutToday: boolean; sortOrder: number }
+export interface MenuItem { id: ID; name: string; nameSw: string; category: MenuCategory; priceCents: number; emoji: string; hue: number; isAvailable: boolean; soldOutToday: boolean; sortOrder: number; imageUrl?: string; description?: string }
 export interface SaleItem { menuItemId: ID; qty: number; unitPriceCents: number; lineTotalCents: number }
 export interface Sale { id: ID; customerId: ID | null; staffId: ID; totalCents: number; paymentMethod: PaymentMethod; channel: "walk_in" | "whatsapp" | "phone" | "app"; items: SaleItem[]; mpesaTxId?: string; createdAt: string }
 export interface Expense { id: ID; category: ExpenseCategory; description: string; amountCents: number; supplierId: ID | null; incurredOn: string; createdAt: string }
@@ -28,3 +28,9 @@ export type ChatCard =
   | { type: "receipt"; title: string; lines: { label: string; cents: number }[]; totalCents: number; stamp?: string }
   | { type: "debts"; rows: { name: string; cents: number; days: number }[]; totalCents: number }
   | { type: "list"; title: string; rows: { label: string; value: string }[] };
+
+export interface SupplierPayment { id: ID; supplierId: ID; amountCents: number; method: "cash" | "mpesa"; createdAt: string }
+export interface StockMove { id: ID; itemId: ID; delta: number; reason: "purchase" | "usage" | "waste" | "adjust"; createdAt: string }
+export interface WagePayment { id: ID; staffId: ID; amountCents: number; createdAt: string }
+export interface SoldOutEvent { id: ID; itemId: ID; at: string }
+export interface WasteEvent { id: ID; itemId: ID; qty: number; at: string }
