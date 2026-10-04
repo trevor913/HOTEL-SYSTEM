@@ -55,3 +55,12 @@ describe("WhatsApp", () => {
   });
   it("hours", () => expect(whatsappReply("Mko wazi saa ngapi?", ctx).kind).toBe("hours"));
 });
+
+import { isOpenNow } from "@/lib/utils/hours";
+describe("opening hours", () => {
+  const h = { open: "06:00", close: "21:30" };
+  it("open mid-day", () => expect(isOpenNow(h, new Date(2026, 9, 4, 13, 0))).toBe(true));
+  it("closed late", () => expect(isOpenNow(h, new Date(2026, 9, 4, 22, 0))).toBe(false));
+  it("closed early", () => expect(isOpenNow(h, new Date(2026, 9, 4, 5, 59))).toBe(false));
+  it("overnight window", () => expect(isOpenNow({ open: "18:00", close: "02:00" }, new Date(2026, 9, 4, 1, 0))).toBe(true));
+});

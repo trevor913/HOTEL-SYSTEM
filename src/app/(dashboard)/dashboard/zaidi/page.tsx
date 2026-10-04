@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { motion } from "motion/react";
-import { CalendarClock, ChevronRight, MessageCircle, Package, Settings, ShoppingBasket, Smartphone, Truck, Users, UtensilsCrossed } from "lucide-react";
+import { CalendarClock, ChevronRight, Globe, MessageCircle, QrCode, Package, Settings, ShoppingBasket, Smartphone, Truck, Users, UtensilsCrossed } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { useT } from "@/lib/i18n";
 import { useApp } from "@/lib/store/app-store";
@@ -24,6 +24,8 @@ export default function ZaidiPage() {
   ];
   const rows = [
     { href: "/dashboard/reconcile", icon: Smartphone, label: t.settings.reconcile, badge: unmatched },
+    { href: `/m/${s.hotel.slug}`, icon: Globe, label: t.pub.publicMenu, badge: 0 },
+    { href: "/dashboard/settings/qr", icon: QrCode, label: t.pub.poster, badge: 0 },
     { href: "/dashboard/settings/whatsapp-sim", icon: MessageCircle, label: t.settings.whatsappSim, badge: 0 },
     { href: "/dashboard/settings", icon: Settings, label: t.nav.settings, badge: 0 },
   ];

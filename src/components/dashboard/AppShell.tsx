@@ -9,6 +9,7 @@ import { Toaster } from "@/components/ui/Toast";
 import { NewDebtSheet } from "./NewDebtSheet";
 import { MsaidiziLauncher } from "./MsaidiziLauncher";
 import { PinLock } from "./PinLock";
+import { OrderAlerts } from "./OrderAlerts";
 import { useT } from "@/lib/i18n";
 import { useApp } from "@/lib/store/app-store";
 import { cn } from "@/lib/utils/cn";
@@ -86,6 +87,7 @@ function Shell({ children }: { children: ReactNode }) {
       {!pathname.startsWith("/dashboard/msaidizi") && !pathname.startsWith("/dashboard/mauzo") && <MsaidiziLauncher />}
       <NewDebtSheet open={debtOpen} onClose={() => setDebtOpen(false)} />
       <PinLock />
+      <OrderAlerts />
 
       {/* Bottom tab bar: thumb zone (mobile) */}
       <nav className="bottom-tabs fixed inset-x-0 z-40 border-t border-line bg-bg/95 backdrop-blur-md lg:hidden" aria-label="Main">

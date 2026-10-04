@@ -1,5 +1,5 @@
 /* Hotel System service worker: offline app shell. Data lives on-device (localStorage) in mock mode. */
-const CACHE = "hotel-system-v4";
+const CACHE = "hotel-system-v5";
 const SHELL = ["/dashboard", "/dashboard/madeni", "/dashboard/mauzo", "/dashboard/msaidizi", "/dashboard/oda", "/icon.svg", "/manifest.webmanifest"];
 
 self.addEventListener("install", (e) => {

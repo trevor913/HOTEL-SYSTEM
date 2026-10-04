@@ -72,6 +72,8 @@ function feed(kind: FeedEvent["kind"], title: string, amountCents: number): Feed
   return { id: uid("f"), kind, title, amountCents, createdAt: nowIso() };
 }
 
+let firstHydration = true;
+
 export const useApp = create<AppState>()(
   persist(
     (set, get) => ({
@@ -325,7 +327,8 @@ export const useApp = create<AppState>()(
         // Demo mode: re-seed a snapshot older than 2 days so "today" always has life.
         if (state && Date.now() - new Date(state.seededAt).getTime() > 2 * 86_400_000) state.resetDemo();
         // PIN lock: always start locked when enabled.
-        if (state?.pinLock) setTimeout(() => useApp.setState({ locked: true }), 0);
+        if (state?.pinLock && firstHydration) setTimeout(() => useApp.setState({ locked: true }), 0);
+        firstHydration = false;
       },
     },
   ),

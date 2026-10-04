@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { ChevronRight, Languages, LayoutGrid, Lock, MessageCircle, MessageSquareText, Moon, RefreshCcw, ShoppingBasket, Smartphone, Sun } from "lucide-react";
+import { ChevronRight, QrCode, Languages, LayoutGrid, Lock, MessageCircle, MessageSquareText, Moon, RefreshCcw, ShoppingBasket, Smartphone, Sun } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Segmented } from "@/components/ui/Segmented";
 import { useToast } from "@/components/ui/Toast";
@@ -42,6 +42,7 @@ export default function SettingsPage() {
       <p className="mt-6 mb-2 text-xs uppercase tracking-[0.16em] text-dim">{t.settings.integrations}</p>
       <nav className="divide-y divide-line rounded-3xl border border-line bg-raised">
         <Link href="/dashboard/reconcile" className="flex h-16 items-center gap-3 px-4"><Smartphone className="size-5 text-sukuma" /><span className="flex-1">{t.settings.reconcile}</span>{unmatched > 0 && <span className="grid h-6 min-w-6 place-items-center rounded-full bg-flame px-1.5 text-xs font-bold text-[var(--flame-ink)]">{unmatched}</span>}<ChevronRight className="size-4 text-dim" /></Link>
+        <Link href="/dashboard/settings/qr" className="flex h-16 items-center gap-3 px-4"><QrCode className="size-5 text-flame" /><span className="flex-1">{t.pub.poster}</span><ChevronRight className="size-4 text-dim" /></Link>
         <Link href="/dashboard/settings/whatsapp-sim" className="flex h-16 items-center gap-3 px-4"><MessageCircle className="size-5 text-[#25D366]" /><span className="flex-1">{t.settings.whatsappSim}</span><ChevronRight className="size-4 text-dim" /></Link>
       </nav>
 
