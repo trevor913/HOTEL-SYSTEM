@@ -11,7 +11,7 @@ test("create a debt, settle it, see the stamp and SMS receipt", async ({ page })
   for (const k of ["3", "5", "0"]) await page.getByRole("button", { name: k, exact: true }).click();
   await page.getByRole("button", { name: "Hifadhi Deni" }).click();
 
-  await page.getByText("Zawadi Test").click();
+  await page.getByRole("button", { name: /^Zawadi Test .*siku/ }).click();
   await page.getByRole("button", { name: "Rekodi Malipo" }).click();
   await page.getByRole("button", { name: "Lipa Yote" }).click();
   await expect(page.getByText(/Deni Limelipwa!/)).toBeVisible();

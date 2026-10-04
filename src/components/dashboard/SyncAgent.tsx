@@ -10,7 +10,12 @@ export function SyncAgent() {
   const t = useT();
   const toast = useToast((x) => x.show);
   useEffect(() => {
-    const unsub = syncQueue.subscribe((n) => useApp.setState({ pendingSync: n }));
+    let soon: ReturnType<typeof setTimeout> | undefined;
+    // Online: flush shortly after each new op so the pending chip only lingers while truly offline.
+    const unsub = syncQueue.subscribe((n) => {
+      useApp.setState({ pendingSync: n });
+      if (n > 0 && navigator.onLine) { clearTimeout(soon); soon = setTimeout(() => void flush(), 1200); }
+    });
     void syncQueue.refresh();
     let wasOffline = !navigator.onLine;
     const flush = async () => {
@@ -26,7 +31,7 @@ export function SyncAgent() {
     window.addEventListener("offline", onOffline);
     document.addEventListener("visibilitychange", onVis);
     const id = setInterval(flush, 30_000);
-    return () => { unsub(); clearInterval(id); window.removeEventListener("online", flush); window.removeEventListener("offline", onOffline); document.removeEventListener("visibilitychange", onVis); };
+    return () => { unsub(); clearTimeout(soon); clearInterval(id); window.removeEventListener("online", flush); window.removeEventListener("offline", onOffline); document.removeEventListener("visibilitychange", onVis); };
   }, [t, toast]);
   return null;
 }

@@ -7,7 +7,7 @@ test("place a public menu order and see it in the Oda queue", async ({ page }) =
   await page.getByRole("button", { name: /Agiza/ }).click();
   await page.getByPlaceholder("Jina lako").fill("Zawadi E2E");
   await page.getByPlaceholder(/Namba ya simu/).fill("0799123456");
-  await page.getByRole("button", { name: "Lipa ukifika" }).first().click();
+  await page.getByRole("tab", { name: "Lipa ukifika" }).click();
   await page.getByRole("button", { name: /Tuma oda/ }).click();
   await expect(page.getByText(/Oda imepokelewa/).first()).toBeVisible();
   await page.goto("/dashboard/oda");
