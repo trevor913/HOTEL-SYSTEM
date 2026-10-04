@@ -74,8 +74,10 @@
 }
 
 @media print {
-  @page { size: A5; margin: 0; }
-  body * { visibility: hidden; }
+  @page { size: A4; margin: 14mm; }
+  @page poster { size: A5; margin: 0; }
+  .print-area { page: poster; }
+  body:has(.print-area) * { visibility: hidden; }
   .print-area, .print-area * { visibility: visible; }
   .print-area { position: fixed; inset: 0; width: 100% !important; margin: 0 !important; }
   .print-area > div { height: 100vh; aspect-ratio: auto; }

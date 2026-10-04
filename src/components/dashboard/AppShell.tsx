@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState, type ReactNode } from "react";
-import { BookOpen, Bot, ChefHat, CloudOff, Home, LayoutGrid, Mic, NotebookPen, Plus, Receipt, Settings, ShoppingBasket, Wallet } from "lucide-react";
+import { BarChart3, BookOpen, Bot, ChefHat, CloudOff, Home, LayoutGrid, Mic, NotebookPen, Plus, Receipt, Settings, ShoppingBasket, Wallet } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { Toaster } from "@/components/ui/Toast";
 import { NewDebtSheet } from "./NewDebtSheet";
@@ -49,7 +49,7 @@ function Shell({ children }: { children: ReactNode }) {
     { href: "/dashboard/oda", label: t.nav.oda, icon: ChefHat, badge: pendingOrders },
     { href: "/dashboard/msaidizi", label: t.nav.msaidizi, icon: Bot },
   ];
-  const side: Tab[] = [...tabs, { href: "/dashboard/matumizi", label: t.nav.matumizi, icon: ShoppingBasket }, { href: "/dashboard/zaidi", label: t.nav.more, icon: LayoutGrid }, { href: "/dashboard/settings", label: t.nav.settings, icon: Settings }];
+  const side: Tab[] = [...tabs, { href: "/dashboard/matumizi", label: t.nav.matumizi, icon: ShoppingBasket }, { href: "/dashboard/ripoti", label: t.rep.title, icon: BarChart3 }, { href: "/dashboard/zaidi", label: t.nav.more, icon: LayoutGrid }, { href: "/dashboard/settings", label: t.nav.settings, icon: Settings }];
   const isActive = (href: string) => (href === "/dashboard" ? pathname === href : pathname.startsWith(href));
   const hideFab = pathname.startsWith("/dashboard/msaidizi") || pathname.startsWith("/dashboard/mauzo") || pathname.startsWith("/dashboard/madeni");
 

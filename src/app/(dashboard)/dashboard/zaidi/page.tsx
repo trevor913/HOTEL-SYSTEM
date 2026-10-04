@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { motion } from "motion/react";
-import { CalendarClock, ChevronRight, Globe, MessageCircle, QrCode, Package, Settings, ShoppingBasket, Smartphone, Truck, Users, UtensilsCrossed } from "lucide-react";
+import { BarChart3, CalendarClock, ChevronRight, Globe, MessageCircle, QrCode, Package, Settings, ShoppingBasket, Smartphone, Truck, Users, UtensilsCrossed } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { useT } from "@/lib/i18n";
 import { useApp } from "@/lib/store/app-store";
@@ -15,6 +15,7 @@ export default function ZaidiPage() {
   const owed = s.suppliers.reduce((a, x) => a + x.balanceOwedCents, 0);
   const unmatched = s.mpesa.filter((m) => m.status === "unmatched").length;
   const tiles = [
+    { href: "/dashboard/ripoti", icon: BarChart3, title: t.rep.title, body: `${t.rep.revenue} · ${t.rep.profit} · CSV`, tone: "text-sukuma" },
     { href: "/dashboard/menu", icon: UtensilsCrossed, title: t.ops.menu, body: `${s.menu.length} ${t.ops.items}`, tone: "text-flame" },
     { href: "/dashboard/menu/plan", icon: CalendarClock, title: t.ops.plan, body: t.ops.planBody, tone: "text-chai" },
     { href: "/dashboard/stock", icon: Package, title: t.ops.stock, body: low ? `${low} ${t.ops.lowCount}` : t.ops.stockBody, tone: low ? "text-nyanya" : "text-ugali" },
